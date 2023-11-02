@@ -19,14 +19,25 @@ import (
 func main() {
 	// Flags
 	var maxNumGoroutines = 8
-	var sheetName, outputName, folderPath string
+	var sheetName, outputName, folderPath, delimiterString string
+	var csvDelimiter rune
 
 	flag.IntVar(&maxNumGoroutines, "g", 8, "Amount of goroutines reading files at once")
-	flag.StringVar(&sheetName, "sn", "", "Name of the specific sheets to parse.")
+	flag.StringVar(&sheetName, "sn", "", "Name of the specific sheets to parse. (Optional)")
 	flag.StringVar(&outputName, "o", "Output", "Name of output file.")
 	flag.StringVar(&folderPath, "p", "", "Path to directory containing excel files to parse.")
+	flag.StringVar(&delimiterString, "d", ";", "Csv delimiter for the output file. Maximum 1 letter.")
 
 	flag.Parse()
+
+	if len(delimiterString) > 1 || len(delimiterString) == 0 {
+		fmt.Print("The csv delimiter provided through [-d] can only be 1 character long. Input provided: [" + delimiterString + "]")
+		return
+	}
+
+	for _, v := range delimiterString {
+		csvDelimiter = v
+	}
 
 	if folderPath == "" {
 		folderPath = promptuserforpath("Enter path to directory: ")
@@ -42,7 +53,7 @@ func main() {
 	routineLimiter := make(chan int, maxNumGoroutines)
 
 	writewg.Add(1)
-	go fileWriter(rowsch, folderPath, outputName, writewg)
+	go fileWriter(rowsch, folderPath, outputName, csvDelimiter, writewg)
 
 	var filecount int
 
@@ -110,7 +121,7 @@ func fileReader(filename string, sheetName string, ch chan<- []string, wg *sync.
 }
 
 // Filewriter creates and writes a csv file from the rows channel.
-func fileWriter(ch <-chan []string, path string, fileName string, wg *sync.WaitGroup) {
+func fileWriter(ch <-chan []string, path string, fileName string, delimiter rune, wg *sync.WaitGroup) {
 	// Make sure path has a trailing slash and create file
 	if path[len(path)-1:] != "/" {
 		path = path + "/"
@@ -123,7 +134,7 @@ func fileWriter(ch <-chan []string, path string, fileName string, wg *sync.WaitG
 
 	// initialize csv writer
 	writer := csv.NewWriter(f)
-	writer.Comma = rune(';')
+	writer.Comma = delimiter
 	rowCount := 0
 
 	// write rows to file
