@@ -43,7 +43,7 @@ func main() {
 		folderPath = promptuserforpath("Enter path to directory: ")
 	}
 
-	fmt.Printf("\n----Variables----\nmaxNumGoroutines:\t%v\nsheetName:\t\t%v\noutputName:\t\t%v\nfolderPath:\t\t%v\n-----------------\n\n", maxNumGoroutines, sheetName, outputName, folderPath)
+	fmt.Printf("\n----Variables----\nmaxNumGoroutines:\t%v\nsheetName:\t\t%v\noutputName:\t\t%v\nfolderPath:\t\t%v\ncsvDelimiter:\t\t%s\n-----------------\n\n", maxNumGoroutines, sheetName, outputName, folderPath, delimiterString)
 
 	rowsch := make(chan []string, 1024)
 
