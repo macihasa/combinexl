@@ -15,18 +15,19 @@ import (
 	"github.com/xuri/excelize/v2"
 )
 
-// This script combines the first sheet of different Excel files into a consolidated Output.csv file.
 func main() {
-	// Flags
-	var maxNumGoroutines = 8
+	// Flags and setup
+	var maxNumGoroutines int
 	var sheetName, outputName, folderPath, delimiterString string
 	var csvDelimiter rune
+	var recursive bool
 
 	flag.IntVar(&maxNumGoroutines, "g", 8, "Amount of goroutines reading files at once")
 	flag.StringVar(&sheetName, "sn", "", "Name of the specific sheets to parse. (Optional)")
 	flag.StringVar(&outputName, "o", "Output", "Name of output file.")
 	flag.StringVar(&folderPath, "p", "", "Path to directory containing excel files to parse.")
 	flag.StringVar(&delimiterString, "d", ";", "Csv delimiter for the output file. Maximum 1 letter.")
+	flag.BoolVar(&recursive, "r", false, "Recursively accesses each subfolder and iterates through their excel documents.")
 
 	flag.Parse()
 
@@ -43,8 +44,9 @@ func main() {
 		folderPath = promptuserforpath("Enter path to directory: ")
 	}
 
-	fmt.Printf("\n----Variables----\nmaxNumGoroutines:\t%v\nsheetName:\t\t%v\noutputName:\t\t%v\nfolderPath:\t\t%v\ncsvDelimiter:\t\t%s\n-----------------\n\n", maxNumGoroutines, sheetName, outputName, folderPath, delimiterString)
+	fmt.Printf("\n----Variables----\nmaxNumGoroutines:\t%v\nsheetName:\t\t%v\noutputName:\t\t%v\nfolderPath:\t\t%v\ncsvDelimiter:\t\t%s\nrecursive:\t\t%v\n-----------------\n\n", maxNumGoroutines, sheetName, outputName, folderPath, delimiterString, recursive)
 
+	// Start of processing
 	rowsch := make(chan []string, 1024)
 
 	readwg := new(sync.WaitGroup)
@@ -55,35 +57,46 @@ func main() {
 	writewg.Add(1)
 	go fileWriter(rowsch, folderPath, outputName, csvDelimiter, writewg)
 
-	var filecount int
+	iterateFolder(folderPath, sheetName, readwg, rowsch, routineLimiter, recursive)
 
+	readwg.Wait()
+	close(rowsch)
+	writewg.Wait()
+}
+
+func iterateFolder(folderPath, sheetName string, readwg *sync.WaitGroup, rowsch chan<- []string, routineLimiter chan int, recursive bool) {
 	filepath.WalkDir(folderPath, func(path string, d os.DirEntry, err error) error {
 		if err != nil {
 			fmt.Println(err)
 			return err
 		}
-		if d.IsDir() {
+
+		// Recursive call if user want to read files in subdirectories
+		if d.IsDir() && recursive && folderPath != path {
+			iterateFolder(path, sheetName, readwg, rowsch, routineLimiter, recursive)
 			return nil
 		}
+
+		// Make sure we're in the folderpath provided by the function caller.
+		if filepath.Dir(path) != folderPath {
+			return nil
+		}
+
 		// Check if file is .xlsx or .xlsm
 		if filepath.Ext(path) != ".xlsx" && filepath.Ext(path) != ".xlsm" {
 			fmt.Println("Skipping file:", "["+d.Name()+"]", " extension:", filepath.Ext(path))
 			return nil
 		}
 
-		filecount++
-
 		readwg.Add(1)
 		routineLimiter <- 1
 		go fileReader(path, sheetName, rowsch, readwg, routineLimiter)
-
 		return nil
 	})
-	readwg.Wait()
-	close(rowsch)
-	writewg.Wait()
 }
 
+// fileReader opens and parses the rows of an excel document sheet into the channel ch.
+// If the user does not provide a specific sheet name through [-sn], the first sheet of each file is processed instead.
 func fileReader(filename string, sheetName string, ch chan<- []string, wg *sync.WaitGroup, limiter chan int) {
 	f, err := excelize.OpenFile(filename)
 	if err != nil {
@@ -92,6 +105,7 @@ func fileReader(filename string, sheetName string, ch chan<- []string, wg *sync.
 
 	sheets := f.GetSheetMap()
 
+	// Check if sheetName is populated.
 	if sheetName == "" {
 		sheetName = sheets[1]
 	} else if !checkIfSheetExists(sheetName, sheets) {
@@ -120,7 +134,7 @@ func fileReader(filename string, sheetName string, ch chan<- []string, wg *sync.
 	wg.Done()
 }
 
-// Filewriter creates and writes a csv file from the rows channel.
+// Filewriter creates and writes a csv file from the rows channel ch.
 func fileWriter(ch <-chan []string, path string, fileName string, delimiter rune, wg *sync.WaitGroup) {
 	// Make sure path has a trailing slash and create file
 	if path[len(path)-1:] != "/" {
@@ -151,6 +165,7 @@ func fileWriter(ch <-chan []string, path string, fileName string, delimiter rune
 	wg.Done()
 }
 
+// checkIfSheetExists takes a sheetname and checks if that exists within a map of sheets.
 func checkIfSheetExists(sheetName string, sheets map[int]string) bool {
 	for _, v := range sheets {
 		if v == sheetName {
@@ -160,7 +175,7 @@ func checkIfSheetExists(sheetName string, sheets map[int]string) bool {
 	return false
 }
 
-// promptuserforpath is used when user excluded the -p flag. For the script to run a path is required.
+// promptuserforpath is used when a user excludes the -p flag. A folder path is mandatory for the script to function.
 func promptuserforpath(prompt string) string {
 	var userInput string
 	scanner := bufio.NewScanner(os.Stdin)
