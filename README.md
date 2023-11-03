@@ -65,15 +65,13 @@ Once you have Go installed, you can follow these steps to install CombineXL:
    git clone https://github.com/macihasa/combinexl.git
    ```
 2. Navigate to the CombineXL directory:
-
-shell
-Copy code
-cd combinexl
-Build the CombineXL executable:
-
-```shell
-go build -o combinexl main.go
-```
+   ```shell
+   cd combinexl
+   ```   
+3. Build the CombineXL executable:
+   ```shell
+   go build -o combinexl main.go
+   ```
 Now, you should have the combinexl executable in the same directory.
 
 You can optionally move the combinexl executable to a location in your system's PATH to make it globally accessible. For example:
