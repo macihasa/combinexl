@@ -27,7 +27,7 @@ func main() {
 	flag.StringVar(&outputName, "o", "Output", "Name of output file.")
 	flag.StringVar(&folderPath, "p", "", "Path to directory containing excel files to parse.")
 	flag.StringVar(&delimiterString, "d", ";", "Csv delimiter for the output file. Maximum 1 letter.")
-	flag.BoolVar(&recursive, "r", false, "Recursively accesses each subfolder and iterates through their excel documents.")
+	flag.BoolVar(&recursive, "r", false, "Recursively goes through each subdirectory and iterates through their excel documents.")
 
 	flag.Parse()
 

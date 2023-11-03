@@ -7,6 +7,7 @@ CombineXL is a command line tool for extracting data from Excel files in a speci
 ```
 $ combinexl -p "path_to_directory" -sn "sheet_name" -o "output_file_name"
 ```
+
 ## Command Line Options
 
 - `-p`: Path to the directory containing Excel files to parse.
@@ -14,13 +15,16 @@ $ combinexl -p "path_to_directory" -sn "sheet_name" -o "output_file_name"
 - `-o`: Name of the output CSV file.
 - `-d`: CSV delimiter for the output file (default is `;`).
 - `-g`: Amount of goroutines for reading files at once (default is 8).
+- `-r`: Recursively goes through each subdirectory and iterates through their excel documents.
 
 ## Example
 
 ```
 `$ combinexl -p "C:\Users\testing\Year to date\" -sn "TestSheet" -o "OutputFileName"`
 ```
+
 Resulting logs:
+
 ```
 
 Variables
@@ -29,6 +33,7 @@ sheetName:              TestSheet
 outputName:             OutputFileName
 folderPath:             C:\Users\testing\Year to date\
 csvDelimiter:           ;
+recursive:   		false
 
 
 Rows processed:  0
@@ -39,17 +44,6 @@ Rows processed:  2000
 Rows processed:  2778 - Finished
 
 ```
-## Variables
-
-- `maxNumGoroutines`: Number of goroutines used for reading files.
-- `sheetName`: Name of the specific Excel sheet to parse.
-- `outputName`: Name of the output CSV file.
-- `folderPath`: Path to the directory containing Excel files.
-- `csvDelimiter`: CSV delimiter used in the output file.
-
-## Output
-
-The tool provides feedback on the number of rows processed and can skip files that don't contain the specified sheet.
 
 ## Installation
 
@@ -65,13 +59,16 @@ Once you have Go installed, you can follow these steps to install CombineXL:
    git clone https://github.com/macihasa/combinexl.git
    ```
 2. Navigate to the CombineXL directory:
+
    ```shell
    cd combinexl
-   ```   
+   ```
 3. Build the CombineXL executable:
+
    ```shell
    go build -o combinexl main.go
    ```
+
 Now, you should have the combinexl executable in the same directory.
 
 You can optionally move the combinexl executable to a location in your system's PATH to make it globally accessible. For example:
@@ -79,14 +76,17 @@ You can optionally move the combinexl executable to a location in your system's 
 ```shell
 mv combinexl /usr/local/bin/
 ```
+
 This step is optional but recommended for convenience.
 
 ### Option 2: Using go install
+
 Install CombineXL using go install:
 
 ```shell
 go install github.com/macihasa/combinexl@latest
 ```
+
 This will install the combinexl executable in your Go binary directory.
 
 You can then run combinexl from anywhere in your terminal.
