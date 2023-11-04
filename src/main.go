@@ -54,12 +54,12 @@ func main() {
 func parseFlags() Config {
 	var config Config
 	var delimiterString string
-	flag.IntVar(&config.MaxNumReaders, "g", 8, "Limits the amount of files being read at once")
-	flag.StringVar(&config.SheetName, "sn", "", "Name of the specific sheets to parse. (Optional)")
-	flag.StringVar(&config.OutputName, "o", "Output", "Name of output file.")
-	flag.StringVar(&config.FolderPath, "p", "", "Path to directory containing excel files to parse.")
-	flag.StringVar(&delimiterString, "d", ";", "Csv delimiter for the output file. Maximum 1 letter.")
-	flag.BoolVar(&config.Recursive, "r", false, "Recursively goes through each subdirectory and iterates through their excel documents.")
+	flag.StringVar(&config.FolderPath, "p", "", "Path to the directory containing Excel files to parse. (Required).")
+	flag.StringVar(&config.SheetName, "sn", "", "Specify the target sheet name in Excel files. (Defaults to first sheet)")
+	flag.StringVar(&config.OutputName, "o", "Output", "Sets the name of the output CSV file. ")
+	flag.StringVar(&delimiterString, "d", ";", "Sets the CSV delimiter for the output file. Must be a single character.")
+	flag.IntVar(&config.MaxNumReaders, "g", 8, "Limits the number of concurrent file readers.")
+	flag.BoolVar(&config.Recursive, "r", false, "Enables recursive processing of subdirectories and all excel files within them.")
 
 	flag.Parse()
 
@@ -128,7 +128,7 @@ func iterateFolder(c Config, readwg *sync.WaitGroup, routineLimiter chan int, ro
 
 // fileReader opens and parses the rows of an Excel document sheet into the channel [ch].
 // If a specific sheet name is not provided, it processes the first sheet of each file.
-// The amount of concurrent fileReaders is limited by the channel [limiter].
+// The amount of concurrent fileReaders running at one time is limited by the channel [limiter].
 func fileReader(filename string, sheetName string, ch chan<- []string, wg *sync.WaitGroup, limiter chan int) {
 	f, err := excelize.OpenFile(filename)
 	if err != nil {

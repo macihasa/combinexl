@@ -11,11 +11,11 @@ $ combinexl -p "path_to_directory" -sn "sheet_name" -o "output_file_name"
 ## Command Line Options
 
 - `-p`: Path to the directory containing Excel files to parse.
-- `-sn`: Name of the specific Excel sheet(s) to parse (optional).
-- `-o`: Name of the output CSV file.
-- `-d`: CSV delimiter for the output file (default is `;`).
-- `-g`: Amount of goroutines for reading files at once (default is 8).
-- `-r`: Recursively goes through each subdirectory and iterates through their excel documents.
+- `-sn`: Specify the target sheet name in Excel files. (Defaults to first sheet of each file).
+- `-o`: Sets the name of the output CSV file.
+- `-d`: Sets the CSV delimiter for the output file. Must be a single character. (defaults to `;`).
+- `-g`: Limits the number of concurrent file readers (defaults to `8`).
+- `-r`: Enables recursive processing of subdirectories and all excel files within them.
 
 ## Example
 
