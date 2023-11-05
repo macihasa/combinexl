@@ -18,6 +18,7 @@ import (
 type Config struct {
 	MaxNumReaders int
 	SheetName     string
+	StartsWith    string
 	OutputName    string
 	FolderPath    string
 	Delimiter     rune
@@ -56,6 +57,7 @@ func parseFlags() Config {
 	var delimiterString string
 	flag.StringVar(&config.FolderPath, "p", "", "Path to the directory containing Excel files to parse. (Required).")
 	flag.StringVar(&config.SheetName, "sn", "", "Specify the target sheet name in Excel files. (Defaults to first sheet)")
+	flag.StringVar(&config.StartsWith, "sw", "", "Filters files to only include those whose names start with the specified string.")
 	flag.StringVar(&config.OutputName, "o", "Output", "Sets the name of the output CSV file. ")
 	flag.StringVar(&delimiterString, "d", ";", "Sets the CSV delimiter for the output file. Must be a single character.")
 	flag.IntVar(&config.MaxNumReaders, "g", 8, "Limits the number of concurrent file readers.")
@@ -115,7 +117,17 @@ func iterateFolder(c Config, readwg *sync.WaitGroup, routineLimiter chan int, ro
 
 		// Check if file is .xlsx or .xlsm
 		if filepath.Ext(path) != ".xlsx" && filepath.Ext(path) != ".xlsm" {
+			if d.IsDir() {
+				fmt.Println("Skipping directory:", "["+d.Name()+"]")
+				return nil
+			}
 			fmt.Println("Skipping file:", "["+d.Name()+"]", " extension:", filepath.Ext(path))
+			return nil
+		}
+
+		// Check if startswith is populated and if the file name starts with that string
+		if c.StartsWith != "" && d.Name()[:len(c.StartsWith)] != c.StartsWith {
+			fmt.Println("Skipping file:", "["+d.Name()+"]", "does not start with: ["+c.StartsWith+"]")
 			return nil
 		}
 
@@ -138,7 +150,7 @@ func fileReader(filename string, sheetName string, ch chan<- []string, wg *sync.
 
 	sheets := f.GetSheetMap()
 
-	// Check if sheetName is populated.
+	// Check if sheetName is populated. If not set it to the first sheet in the file
 	if sheetName == "" {
 		sheetName = sheets[1]
 	} else if !checkIfSheetExists(sheetName, sheets) {
@@ -147,11 +159,13 @@ func fileReader(filename string, sheetName string, ch chan<- []string, wg *sync.
 		return
 	}
 
+	// Get rows from sheet
 	rows, err := f.Rows(sheetName)
 	if err != nil {
 		fmt.Println("unable to get rows from sheet: ", err)
 	}
 
+	// Iterate over rows and send them to the channel
 	for rows.Next() {
 		row, err := rows.Columns()
 		if err != nil {
