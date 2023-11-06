@@ -48,11 +48,18 @@ Rows processed:  2778 - Finished
 
 ## Installation
 
-To install CombineXL, you'll need to have Go (Golang) installed on your system. If you don't have it already, you can download and install it from the official [Go website](https://golang.org/dl/).
+There are multiple installation methods available for CombineXL. If you opt for option 2 or 3, ensure that you have Go (Golang) installed on your system. If you don't have it already, you can download and install it from the official [Go website](https://golang.org/dl/).
 
-Once you have Go installed, you can follow these steps to install CombineXL:
+### Option 1: Download the Binary
 
-### Option 1: Building from Source
+If you do not have Go installed or prefer not to build from source, you can download the pre-compiled binary (.exe file) from the [Releases](https://github.com/macihasa/combinexl/releases) page. Once downloaded, you can run CombineXL without any further installation steps.
+
+You can optionally move the combinexl executable to a location in your system's PATH to make it globally accessible for your terminals. For example:
+
+```shell
+mv combinexl /usr/local/bin/
+```
+### Option 2: Building from Source 
 
 1. Clone the CombineXL repository to your local machine:
 
@@ -72,7 +79,7 @@ Once you have Go installed, you can follow these steps to install CombineXL:
 
 Now, you should have the combinexl executable in the same directory.
 
-You can optionally move the combinexl executable to a location in your system's PATH to make it globally accessible. For example:
+Like option 1 you can optionally move the combinexl executable to a location in your system's PATH to make it globally accessible. For example:
 
 ```shell
 mv combinexl /usr/local/bin/
@@ -80,7 +87,7 @@ mv combinexl /usr/local/bin/
 
 This step is optional but recommended for convenience.
 
-### Option 2: Using go install
+### Option 3: Using go install
 
 Install CombineXL using go install:
 
