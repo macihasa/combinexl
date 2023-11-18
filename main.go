@@ -17,13 +17,14 @@ import (
 
 // Config contains the flag properties provided by the user.
 type Config struct {
-	MaxNumReaders int
-	SheetName     string
-	StartsWith    string
-	OutputName    string
-	FolderPath    string
-	Delimiter     rune
-	Recursive     bool
+	MaxNumReaders  int
+	SheetName      string
+	StartsWith     string
+	OutputFileName string
+	OutputFilePath string
+	FolderPath     string
+	Delimiter      rune
+	Recursive      bool
 }
 
 func main() {
@@ -166,8 +167,13 @@ func fileReader(filenames chan string, c Config, ch chan<- []string, wg *sync.Wa
 // The output file is named based on the provided configuration and the current timestamp.
 func fileWriter(ch <-chan []string, c Config, wg *sync.WaitGroup) {
 	// Make sure path has a trailing slash and create file
-	outputFileName := c.OutputName + " " + time.Now().Format("2006-01-02 15_04_05") + ".csv"
+	outputFileName := c.OutputFileName + " " + time.Now().Format("2006-01-02 15_04_05") + ".csv"
 	outputFilePath := filepath.Join(c.FolderPath, outputFileName)
+
+	// If [op] flag is populated, replace outputfilepath.
+	if c.OutputFilePath != "" {
+		outputFilePath = filepath.Join(c.OutputFilePath, outputFileName)
+	}
 
 	f, err := os.Create(outputFilePath)
 
@@ -204,7 +210,8 @@ func parseFlags() Config {
 	flag.StringVar(&config.FolderPath, "p", "", "Path to the directory containing Excel files to parse. (Required).")
 	flag.StringVar(&config.SheetName, "sn", "", "Specify the target sheet name in Excel files. (Defaults to first sheet)")
 	flag.StringVar(&config.StartsWith, "sw", "", "Filters files to only include those whose names start with the specified string.")
-	flag.StringVar(&config.OutputName, "o", "Output", "Sets the name of the output CSV file. ")
+	flag.StringVar(&config.OutputFileName, "o", "Output", "Sets the name of the output CSV file. ")
+	flag.StringVar(&config.OutputFilePath, "op", "", "Sets directory location to put output file")
 	flag.StringVar(&delimiterString, "d", ";", "Sets the CSV delimiter for the output file. Must be a single character.")
 	flag.IntVar(&config.MaxNumReaders, "g", 8, "Limits the number of concurrent file readers.")
 	flag.BoolVar(&config.Recursive, "r", false, "Enables recursive processing of subdirectories and all excel files within them.")
