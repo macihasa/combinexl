@@ -196,7 +196,7 @@ func fileWriter(ch <-chan []string, c Config, wg *sync.WaitGroup) {
 		writer.Write(row)
 		rowCount++
 	}
-	fmt.Println("Rows processed: ", rowCount)
+	fmt.Println("Rows processed: ", rowCount, "- Finished")
 	writer.Flush()
 	wg.Done()
 }
@@ -211,7 +211,7 @@ func parseFlags() Config {
 	flag.StringVar(&config.SheetName, "sn", "", "Specify the target sheet name in Excel files. (Defaults to first sheet)")
 	flag.StringVar(&config.StartsWith, "sw", "", "Filters files to only include those whose names start with the specified string.")
 	flag.StringVar(&config.OutputFileName, "o", "Output", "Sets the name of the output CSV file. ")
-	flag.StringVar(&config.OutputFilePath, "op", "", "Sets directory location to put output file")
+	flag.StringVar(&config.OutputFilePath, "op", "", "Sets directory location of output file")
 	flag.StringVar(&delimiterString, "d", ";", "Sets the CSV delimiter for the output file. Must be a single character.")
 	flag.IntVar(&config.MaxNumReaders, "g", 8, "Limits the number of concurrent file readers.")
 	flag.BoolVar(&config.Recursive, "r", false, "Enables recursive processing of subdirectories and all excel files within them.")

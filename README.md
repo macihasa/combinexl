@@ -14,6 +14,7 @@ $ combinexl -p "path_to_directory" -sn "sheet_name" -o "output_file_name"
 - `-sn`: Specify the target sheet name in Excel files. (Defaults to first sheet of each file).
 - `-sw`: Filters files to only include those whose names start with the specified string.
 - `-o`: Sets the name of the output CSV file.
+- `-op`: Sets directory location of output file.
 - `-d`: Sets the CSV delimiter for the output file. Must be a single character. (defaults to `;`).
 - `-g`: Limits the number of concurrent file readers (defaults to `8`).
 - `-r`: Enables recursive processing of subdirectories and all excel files within them.
