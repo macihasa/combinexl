@@ -25,6 +25,7 @@ type Config struct {
 	FolderPath     string
 	Delimiter      rune
 	Recursive      bool
+	HistoricalData bool
 }
 
 func main() {
@@ -32,8 +33,10 @@ func main() {
 	config := parseFlags()
 	printFlags(config)
 
+	// Rows channel is used for transmission of data between the filereaders and the filewriter
 	rowsch := make(chan []string, 1024)
 
+	// Wait groups
 	readwg := new(sync.WaitGroup)
 	writewg := new(sync.WaitGroup)
 
@@ -68,6 +71,11 @@ func main() {
 	readwg.Wait()
 	close(rowsch)
 	writewg.Wait()
+
+	if config.HistoricalData {
+		moveFilesToFolder(filenames, "Historical_Data")
+	}
+
 }
 
 // iterateFolder walks the folder provided in [folderPath] and adds all .
@@ -201,6 +209,24 @@ func fileWriter(ch <-chan []string, c Config, wg *sync.WaitGroup) {
 	wg.Done()
 }
 
+// moveFilesToFolder moves files specified in [filenames] to a new folder named [foldername].
+func moveFilesToFolder(filenames []string, foldername string) {
+	if len(filenames) == 0 {
+		fmt.Println("No files found.")
+		return
+	}
+	err := os.Mkdir(filepath.Join(filepath.Dir(filenames[0]), foldername), 0755)
+	if err != nil {
+		fmt.Println("unable to create dir", foldername, err)
+	}
+	for _, v := range filenames {
+		err = os.Rename(v, filepath.Join(filepath.Dir(v), foldername, filepath.Base(v)))
+		if err != nil {
+			fmt.Println("unable to move files.", err)
+		}
+	}
+}
+
 // parseFlags parses command-line flags and returns a Config with user-specified options.
 // It handles options for concurrent readers, sheet name, output file, folder path, CSV delimiter, and recursion.
 // Invalid flags or missing folder path terminate the program.
@@ -215,6 +241,7 @@ func parseFlags() Config {
 	flag.StringVar(&delimiterString, "d", ";", "Sets the CSV delimiter for the output file. Must be a single character.")
 	flag.IntVar(&config.MaxNumReaders, "g", 8, "Limits the number of concurrent file readers.")
 	flag.BoolVar(&config.Recursive, "r", false, "Enables recursive processing of subdirectories and all excel files within them.")
+	flag.BoolVar(&config.HistoricalData, "h", false, "Option for used files to be moved to a historical data folder after usage.")
 
 	flag.Parse()
 
